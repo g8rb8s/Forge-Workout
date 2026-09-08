@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FORGE" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <title>FORGE Workout</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="icon.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png" />
+  <link rel="apple-touch-icon" sizes="167x167" href="icon.png" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; background: #0a0a0f; color: #fff; font-family: 'Arial Narrow', Arial, sans-serif; overscroll-behavior: none; }
+    #root { height: 100%; }
+
+    .screen { min-height: 100vh; min-height: -webkit-fill-available; background: #0a0a0f; position: relative; overflow-y: auto; }
+    .bg { position: fixed; inset: 0; background: radial-gradient(ellipse at 20% 20%, rgba(0,255,136,0.04) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(0,100,255,0.04) 0%, transparent 60%); pointer-events: none; z-index: 0; }
+    .container { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: env(safe-area-inset-top, 24px) 16px calc(env(safe-area-inset-bottom, 0px) + 40px); padding-top: max(env(safe-area-inset-top), 24px); }
+
+    .title { font-size: 42px; font-weight: 900; letter-spacing: 12px; color: #fff; text-shadow: 0 0 30px rgba(0,255,136,0.3); }
+    .subtitle { font-size: 11px; letter-spacing: 4px; color: #00ff88; opacity: 0.8; margin-top: 4px; }
+
+    .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .card-green { border-color: rgba(0,255,136,0.4) !important; }
+
+    .label { font-size: 10px; letter-spacing: 2px; color: #888; display: block; margin-bottom: 10px; }
+
+    .toggle-group { display: flex; gap: 8px; }
+    .toggle-btn { flex: 1; padding: 10px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: #888; font-weight: 700; font-size: 12px; cursor: pointer; font-family: inherit; letter-spacing: 0.3px; line-height: 1.3; text-align: center; }
+    .toggle-btn.active { border-color: rgba(0,255,136,0.5); background: rgba(0,255,136,0.1); color: #00ff88; }
+    .toggle-btn .sub { font-size: 9px; opacity: 0.7; display: block; font-weight: 400; letter-spacing: 0; }
+
+    .btn-primary { width: 100%; padding: 16px; border-radius: 10px; border: none; background: linear-gradient(135deg, #00ff88, #00cc66); color: #000; font-weight: 900; font-size: 15px; letter-spacing: 2px; cursor: pointer; margin-bottom: 10px; font-family: inherit; }
+    .btn-ghost { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: #888; font-weight: 700; font-size: 13px; letter-spacing: 1px; cursor: pointer; margin-bottom: 10px; font-family: inherit; }
+    .btn-blue { background: linear-gradient(135deg, #00aaff, #0066ff) !important; color: #fff !important; }
+    .btn-sm { padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 12px; cursor: pointer; font-family: inherit; border: none; }
+
+    .gear-tag { display: inline-flex; align-items: center; gap: 5px; background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.2); border-radius: 20px; padding: 5px 12px; font-size: 13px; color: #00ff88; margin: 3px; }
+
+    .exercise-card { cursor: pointer; padding: 12px 14px !important; }
+    .round-bar { display: flex; gap: 6px; margin-bottom: 16px; }
+    .round-seg { flex: 1; height: 4px; border-radius: 2px; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .stat-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 8px; text-align: center; }
+
+    .switch { width: 44px; height: 24px; border-radius: 12px; cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; }
+    .switch-thumb { position: absolute; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left 0.2s; }
+
+    .round-pills { display: flex; gap: 4px; margin-top: 10px; justify-content: center; flex-wrap: wrap; }
+    .round-pill { font-size: 11px; border-radius: 8px; padding: 1px 7px; }
+    .rep-btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; }
+    .rep-btn { padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; font-family: inherit; }
+
+    .history-exercises { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .ex-tag { font-size: 11px; color: #aaa; background: rgba(255,255,255,0.06); border-radius: 10px; padding: 2px 8px; }
+    .breakdown-row { display: flex; justify-content: space-between; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); align-items: center; }
+    .round-boxes { display: flex; gap: 6px; }
+    .round-box { flex: 1; text-align: center; border-radius: 8px; padding: 6px 4px; min-width: 32px; }
+
+    .level-badge { display: inline-block; font-size: 10px; letter-spacing: 1px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+    .level-beginner { background: rgba(0,200,100,0.15); color: #00c864; }
+    .level-intermediate { background: rgba(255,180,0,0.15); color: #ffb400; }
+    .level-advanced { background: rgba(255,80,80,0.15); color: #ff5050; }
+
+    input[type=number] { -moz-appearance: textfield; }
+    input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    #install-banner { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,20,10,0.97); border-top: 1px solid rgba(0,255,136,0.3); padding: 16px; z-index: 999; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+    #install-banner.show { display: block; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<div id="install-banner">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <span style="font-weight:800;color:#00ff88;font-size:15px;">📲 Add to Home Screen</span>
+    <button onclick="document.getElementById('install-banner').classList.remove('show')" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;">✕</button>
+  </div>
+  <p style="color:#aaa;font-size:13px;line-height:1.5;">Tap <strong style="color:#fff;">Share ↑</strong> in Safari, then <strong style="color:#fff;">"Add to Home Screen"</strong> to install FORGE as an app.</p>
+</div>
+<script>
+// ─── EXERCISE DATABASE ────────────────────────────────────────────────────────
+// reps/seconds arrays: [beginner, intermediate, advanced]
+const EXERCISES = {
+  circuit: [
+    // ── Kettlebell — rep-based, military-grade volume at advanced ─────────────
+    { name:"KB Swings",             equipment:"Kettlebell",    type:"reps", reps:[15,25,40],   icon:"🔔" },
+    { name:"KB Goblet Squat",       equipment:"Kettlebell",    type:"reps", reps:[15,25,40],   icon:"🔔" },
+    { name:"KB Single-Arm Press",   equipment:"Kettlebell",    type:"reps", reps:[8,12,20],    icon:"🔔" },
+    { name:"KB Romanian Deadlift",  equipment:"Kettlebell",    type:"reps", reps:[12,20,30],   icon:"🔔" },
+    { name:"KB Turkish Get-Up",     equipment:"Kettlebell",    type:"reps", reps:[2,4,6],      icon:"🔔" },
+    { name:"KB Clean & Press",      equipment:"Kettlebell",    type:"reps", reps:[8,12,20],    icon:"🔔" },
+    { name:"KB Sumo Squat",         equipment:"Kettlebell",    type:"reps", reps:[15,25,40],   icon:"🔔" },
+    { name:"KB Alternating Row",    equipment:"Kettlebell",    type:"reps", reps:[10,16,24],   icon:"🔔" },
+    { name:"KB Farmers Carry",      equipment:"Kettlebell",    type:"time", seconds:[30,45,60],icon:"🔔" },
+    { name:"KB Thruster",           equipment:"Kettlebell",    type:"reps", reps:[8,15,25],    icon:"🔔" },
+    // ── Pull-up Bar — rep-based, higher advanced volume ──────────────────────
+    { name:"Pull-Ups",              equipment:"Pull-up Bar",   type:"reps", reps:[5,8,15],     icon:"🏋️" },
+    { name:"Chin-Ups",              equipment:"Pull-up Bar",   type:"reps", reps:[5,8,15],     icon:"🏋️" },
+    { name:"Hanging Knee Raises",   equipment:"Pull-up Bar",   type:"reps", reps:[10,20,30],   icon:"🏋️" },
+    { name:"Hanging Leg Raises",    equipment:"Pull-up Bar",   type:"reps", reps:[8,15,25],    icon:"🏋️" },
+    { name:"Dead Hang",             equipment:"Pull-up Bar",   type:"time", seconds:[20,35,60],icon:"🏋️" },
+    { name:"Bar Inverted Row",      equipment:"Pull-up Bar",   type:"reps", reps:[10,15,25],   icon:"🏋️" },
+    { name:"L-Sit Hold (Bar)",      equipment:"Pull-up Bar",   type:"time", seconds:[10,20,40],icon:"🏋️" },
+    // ── Push-Up Variations — reps, military-volume at advanced ───────────────
+    { name:"Push-Ups",              equipment:"Bodyweight",    type:"reps", reps:[15,30,60],   icon:"💪" },
+    { name:"Diamond Push-Ups",      equipment:"Bodyweight",    type:"reps", reps:[10,20,35],   icon:"💪" },
+    { name:"Spiderman Push-Ups",    equipment:"Bodyweight",    type:"reps", reps:[10,16,25],   icon:"💪" },
+    { name:"Wide-Grip Push-Ups",    equipment:"Bodyweight",    type:"reps", reps:[15,25,40],   icon:"💪" },
+    { name:"Pike Push-Ups",         equipment:"Bodyweight",    type:"reps", reps:[8,15,25],    icon:"💪" },
+    // ── TRX — rep-based for strength focus, higher advanced volume ───────────
+    { name:"TRX Row",               equipment:"TRX Bands",     type:"reps", reps:[10,15,25],   icon:"🪢" },
+    { name:"TRX Push-Up",           equipment:"TRX Bands",     type:"reps", reps:[10,15,25],   icon:"🪢" },
+    { name:"TRX Squat",             equipment:"TRX Bands",     type:"reps", reps:[15,25,40],   icon:"🪢" },
+    { name:"TRX Lunge",             equipment:"TRX Bands",     type:"reps", reps:[10,16,25],   icon:"🪢" },
+    { name:"TRX Bicep Curl",        equipment:"TRX Bands",     type:"reps", reps:[10,15,25],   icon:"🪢" },
+    { name:"TRX Tricep Press",      equipment:"TRX Bands",     type:"reps", reps:[10,15,25],   icon:"🪢" },
+    { name:"TRX Plank",             equipment:"TRX Bands",     type:"time", seconds:[20,40,60],icon:"🪢" },
+    { name:"TRX Mountain Climber",  equipment:"TRX Bands",     type:"reps", reps:[15,25,40],   icon:"🪢" },
+    { name:"TRX Hamstring Curl",    equipment:"TRX Bands",     type:"reps", reps:[10,15,20],   icon:"🪢" },
+    { name:"TRX Atomic Push-Up",    equipment:"TRX Bands",     type:"reps", reps:[6,12,20],    icon:"🪢" },
+    // ── Medicine Ball — core & power, military-volume reps ───────────────────
+    { name:"MB Wall Ball",          equipment:"Medicine Ball", type:"reps", reps:[15,25,40],   icon:"⚫" },
+    { name:"MB Russian Twist",      equipment:"Medicine Ball", type:"reps", reps:[15,25,40],   icon:"⚫" },
+    { name:"MB Overhead Squat",     equipment:"Medicine Ball", type:"reps", reps:[15,20,30],   icon:"⚫" },
+    { name:"MB Overhead Lunge",     equipment:"Medicine Ball", type:"reps", reps:[10,16,25],   icon:"⚫" },
+    { name:"MB Chest Pass Squat",   equipment:"Medicine Ball", type:"reps", reps:[10,15,25],   icon:"⚫" },
+    { name:"MB Sit-Up & Press",     equipment:"Medicine Ball", type:"reps", reps:[15,20,30],   icon:"⚫" },
+    { name:"MB Lateral Toss Squat", equipment:"Medicine Ball", type:"reps", reps:[10,15,20],   icon:"⚫" },
+    // ── Core — military-grade volume, matches sit-up / crunch reference ──────
+    { name:"Sit-Ups",               equipment:"Bodyweight",    type:"reps", reps:[20,40,80],   icon:"💪" },
+    { name:"Plank Hold",            equipment:"Bodyweight",    type:"time", seconds:[30,50,90],icon:"💪" },
+    { name:"Hanging Knee Raises",   equipment:"Pull-up Bar",   type:"reps", reps:[10,20,30],   icon:"🏋️" },
+    { name:"Diagonal Rev. Crunches",equipment:"Bodyweight",    type:"reps", reps:[15,25,40],   icon:"💪" },
+    { name:"Flutter Kicks",         equipment:"Bodyweight",    type:"time", seconds:[20,40,60],icon:"💪" },
+    { name:"Low to High Plank",     equipment:"Bodyweight",    type:"time", seconds:[20,35,60],icon:"💪" },
+    { name:"Shoulder Taps",         equipment:"Bodyweight",    type:"time", seconds:[20,35,60],icon:"💪" },
+    { name:"Leg Raises",            equipment:"Bodyweight",    type:"reps", reps:[10,20,35],   icon:"💪" },
+    { name:"V-Ups",                 equipment:"Bodyweight",    type:"reps", reps:[10,20,35],   icon:"💪" },
+    { name:"Lower Back Extensions", equipment:"Bodyweight",    type:"reps", reps:[15,20,30],   icon:"💪" },
+    { name:"Alternating Tucks + Leg Raises", equipment:"Bodyweight", type:"reps", reps:[15,25,40], icon:"💪" },
+    { name:"DB Bicep Curl",         equipment:"Dumbbells",     type:"reps", reps:[25,25,25],   icon:"🏅" },
+  ], [
+    // Strength / rep-based — advanced targets match reference (100 squats, 80 sit-ups, 60 push-ups, 40 burpees ladder)
+    { name:"Squats",                        equipment:"Bodyweight",    type:"reps", reps:[25,50,100],  icon:"💪" },
+    { name:"Sit-Ups",                       equipment:"Bodyweight",    type:"reps", reps:[20,40,80],   icon:"💪" },
+    { name:"Push-Ups",                      equipment:"Bodyweight",    type:"reps", reps:[15,30,60],   icon:"💪" },
+    { name:"Burpees",                       equipment:"Bodyweight",    type:"reps", reps:[10,20,40],   icon:"💪" },
+    { name:"Reverse Lunges",                equipment:"Bodyweight",    type:"reps", reps:[10,20,40],   icon:"💪" },
+    { name:"Pull-Ups",                      equipment:"Pull-up Bar",   type:"reps", reps:[3,6,10],     icon:"🏋️" },
+    { name:"Chin-Ups",                      equipment:"Pull-up Bar",   type:"reps", reps:[3,6,10],     icon:"🏋️" },
+    { name:"Diamond Push-Ups",              equipment:"Bodyweight",    type:"reps", reps:[8,15,25],    icon:"💪" },
+    { name:"Diagonal Reverse Crunches",     equipment:"Bodyweight",    type:"reps", reps:[10,20,30],   icon:"💪" },
+    { name:"Bear Crawl (15m)",              equipment:"Bodyweight",    type:"reps", reps:[2,3,5],      icon:"💪" },
+    { name:"KB Swings",                     equipment:"Kettlebell",    type:"reps", reps:[15,25,40],   icon:"🔔" },
+    { name:"KB Farmers Carry",              equipment:"Kettlebell",    type:"time", seconds:[20,40,60],icon:"🔔" },
+    { name:"TRX Inverted Row",              equipment:"TRX Bands",     type:"reps", reps:[8,14,20],    icon:"🪢" },
+    { name:"MB Russian Twist",             equipment:"Medicine Ball",  type:"reps", reps:[15,25,40],   icon:"⚫" },
+    // HIIT / timed — drawn from Giant Set Combat Training and HIIT Military Challenge (50 sec advanced)
+    { name:"Jumping Jacks",                 equipment:"Bodyweight",    type:"time", seconds:[20,40,60],icon:"💪" },
+    { name:"High Knees",                    equipment:"Bodyweight",    type:"time", seconds:[20,40,60],icon:"💪" },
+    { name:"Mountain Climbers",             equipment:"Bodyweight",    type:"time", seconds:[20,40,60],icon:"💪" },
+    { name:"Squat Jumps",                   equipment:"Bodyweight",    type:"time", seconds:[20,30,50],icon:"💪" },
+    { name:"Plank Jacks",                   equipment:"Bodyweight",    type:"time", seconds:[20,30,50],icon:"💪" },
+    { name:"Star Jacks",                    equipment:"Bodyweight",    type:"time", seconds:[20,40,60],icon:"💪" },
+    { name:"Toe Taps",                      equipment:"Bodyweight",    type:"time", seconds:[20,40,60],icon:"💪" },
+    { name:"Low to High Plank",             equipment:"Bodyweight",    type:"time", seconds:[20,30,50],icon:"💪" },
+    { name:"Plank Burpees",                 equipment:"Bodyweight",    type:"time", seconds:[20,35,50],icon:"💪" },
+    { name:"Shoulder Taps",                 equipment:"Bodyweight",    type:"time", seconds:[20,40,60],icon:"💪" },
+    { name:"Lower Back Extensions",         equipment:"Bodyweight",    type:"time", seconds:[20,30,50],icon:"💪" },
+    { name:"Flutter Kicks",                 equipment:"Bodyweight",    type:"time", seconds:[20,40,60],icon:"💪" },
+    { name:"Lateral High Knees",            equipment:"Bodyweight",    type:"time", seconds:[20,40,50],icon:"💪" },
+    { name:"Jumping Lunges",                equipment:"Bodyweight",    type:"time", seconds:[20,35,50],icon:"💪" },
+    { name:"Shuffle + Side Lunges",         equipment:"Bodyweight",    type:"time", seconds:[20,35,50],icon:"💪" },
+    { name:"Alternating High Kicks",        equipment:"Bodyweight",    type:"time", seconds:[20,40,50],icon:"💪" },
+    { name:"Squat + Side Step",             equipment:"Bodyweight",    type:"time", seconds:[20,40,50],icon:"💪" },
+    { name:"Jab and Cross",                 equipment:"Bodyweight",    type:"time", seconds:[20,40,50],icon:"💪" },
+    { name:"Crossover + Knee to Elbow",     equipment:"Bodyweight",    type:"time", seconds:[20,40,50],icon:"💪" },
+    { name:"Plyo Side Squats",              equipment:"Bodyweight",    type:"time", seconds:[20,35,50],icon:"💪" },
+    { name:"Plyo Squat + Twist",            equipment:"Bodyweight",    type:"time", seconds:[20,35,50],icon:"💪" },
+    { name:"Spiderman Push-Ups",            equipment:"Bodyweight",    type:"time", seconds:[20,30,50],icon:"💪" },
+    { name:"London Bridge",                 equipment:"Bodyweight",    type:"time", seconds:[20,30,50],icon:"💪" },
+    { name:"In-Out Steps",                  equipment:"Bodyweight",    type:"time", seconds:[20,40,50],icon:"💪" },
+    { name:"Alternating Tucks + Leg Raises",equipment:"Bodyweight",    type:"time", seconds:[20,40,50],icon:"💪" },
+    { name:"Plank Hold",                    equipment:"Bodyweight",    type:"time", seconds:[30,50,80],icon:"💪" },
+    { name:"DB Bicep Curl",                 equipment:"Dumbbells",     type:"reps", reps:[25,25,25],  icon:"🏅" },
+  ]
+};
+
+// ─── STAPLE EXERCISES — guaranteed every workout ──────────────────────────────
+// These are always inserted into the random pool; exCount is reduced by staple count
+const STAPLES = {
+  circuit:  [
+    { name:"Pull-Ups",     equipment:"Pull-up Bar", type:"reps", reps:[5,5,5],   icon:"🏋️", staple:true },
+    { name:"DB Bicep Curl",equipment:"Dumbbells",   type:"reps", reps:[25,25,25],icon:"🏅", staple:true },
+  ],
+  military: [
+    { name:"Pull-Ups",     equipment:"Pull-up Bar", type:"reps", reps:[5,5,5],   icon:"🏋️", staple:true },
+    { name:"DB Bicep Curl",equipment:"Dumbbells",   type:"reps", reps:[25,25,25],icon:"🏅", staple:true },
+  ],
+};
+
+// Duration → {exCount, rounds} per workout type
+// More time = more exercises and/or more rounds
+const WORKOUT_PARAMS = {
+  circuit: {
+    20: { beginner:{exCount:4,rounds:2}, intermediate:{exCount:5,rounds:2}, advanced:{exCount:7,rounds:3} },
+    30: { beginner:{exCount:5,rounds:2}, intermediate:{exCount:6,rounds:3}, advanced:{exCount:8,rounds:3} },
+    45: { beginner:{exCount:6,rounds:3}, intermediate:{exCount:7,rounds:3}, advanced:{exCount:9,rounds:4} },
+    60: { beginner:{exCount:7,rounds:3}, intermediate:{exCount:8,rounds:4}, advanced:{exCount:10,rounds:5} },
+  },
+  military: {
+    20: { beginner:{exCount:4,rounds:2}, intermediate:{exCount:5,rounds:2}, advanced:{exCount:6,rounds:3} },
+    30: { beginner:{exCount:5,rounds:2}, intermediate:{exCount:6,rounds:3}, advanced:{exCount:8,rounds:3} },
+    45: { beginner:{exCount:6,rounds:3}, intermediate:{exCount:8,rounds:3}, advanced:{exCount:10,rounds:4} },
+    60: { beginner:{exCount:7,rounds:3}, intermediate:{exCount:9,rounds:4}, advanced:{exCount:12,rounds:5} },
+  }
+};
+
+const LEVEL_IDX = { beginner:0, intermediate:1, advanced:2 };
+const LEVEL_LABELS = { beginner:'BEGINNER', intermediate:'INTERMEDIATE', advanced:'ADVANCED' };
+const LEVEL_COLORS = { beginner:'#00c864', intermediate:'#ffb400', advanced:'#ff5050' };
+const LEVEL_DESC = {
+  beginner: 'Lower reps, controlled pace. Build strength and form.',
+  intermediate: 'Moderate volume. Push the reps and own your equipment.',
+  advanced: 'Military-grade volume. Max reps, full effort every round.'
+};
+
+function shuffle(a) { return [...a].sort(()=>Math.random()-0.5); }
+function fmtTime(s) { return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+function fmtDur(s) { const m=Math.floor(s/60); return m>0?`${m}m ${s%60}s`:`${s}s`; }
+function dateStr(iso) { return new Date(iso).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); }
+function dateLong(iso) { return new Date(iso).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}); }
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let state = {
+  screen: 'home',
+  selectedType: 'circuit',
+  selectedLevel: 'intermediate',
+  selectedDuration: 30,
+  workout: null,
+  currentRound: 0,
+  timerSeconds: 0,
+  timerRunning: false,
+  history: [],
+  historyDetail: null,
+  expandedEx: null,
+};
+
+function loadHistory() {
+  try { state.history = JSON.parse(localStorage.getItem('forge_history')||'[]'); } catch { state.history=[]; }
+}
+function saveHistory() { localStorage.setItem('forge_history', JSON.stringify(state.history)); }
+loadHistory();
+
+// ─── TIMER ────────────────────────────────────────────────────────────────────
+let timerInterval = null;
+function startTimer() {
+  if (timerInterval) return;
+  state.timerRunning = true;
+  timerInterval = setInterval(()=>{ state.timerSeconds++; renderTimerOnly(); }, 1000);
+}
+function stopTimer() { clearInterval(timerInterval); timerInterval=null; state.timerRunning=false; }
+function resetTimer() { stopTimer(); state.timerSeconds=0; }
+function renderTimerOnly() {
+  const el = document.getElementById('elapsed-display');
+  if (el) { el.textContent=fmtTime(state.timerSeconds); el.style.color=state.timerRunning?'#00ff88':state.timerSeconds>0?'#ffcc00':'#555'; }
+  const btn = document.getElementById('timer-toggle-btn');
+  if (btn) { btn.textContent=state.timerRunning?'⏸ PAUSE':state.timerSeconds===0?'▶ START':'▶ RESUME'; btn.style.background=state.timerRunning?'#ff6b35':'#00ff88'; }
+}
+
+// ─── GENERATE WORKOUT ─────────────────────────────────────────────────────────
+function generateWorkout() {
+  const {selectedType:type, selectedLevel:level, selectedDuration:dur} = state;
+  const params = WORKOUT_PARAMS[type][dur][level];
+  const {exCount, rounds} = params;
+  const li = LEVEL_IDX[level];
+
+  // Always include staples; fill remaining slots randomly from pool (excluding staple names)
+  const staples = STAPLES[type];
+  const stapleNames = new Set(staples.map(s=>s.name));
+  const pool = EXERCISES[type].filter(ex=>!stapleNames.has(ex.name));
+  const randomCount = Math.max(0, exCount - staples.length);
+  const randomPick = shuffle(pool).slice(0, randomCount);
+
+  // Shuffle staples into the random selection so they appear at random positions
+  const selected = shuffle([...staples, ...randomPick]);
+  state.workout = {
+    id: Date.now(), type, level, duration_target: dur, rounds,
+    date: new Date().toISOString(),
+    exercises: selected.map(ex=>({
+      ...ex,
+      target: ex.type==='reps' ? ex.reps[li] : ex.seconds[li],
+      completedRounds: Array(rounds).fill(null),
+    })),
+    includeBike: false, bikeCompleted: false, completed: false,
+  };
+  state.currentRound=0; state.expandedEx=null;
+  resetTimer();
+  // clear countdown state
+  Object.keys(countdownState).forEach(k=>{ clearInterval(countdownState[k].interval); delete countdownState[k]; });
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  const root = document.getElementById('root');
+  switch(state.screen) {
+    case 'home':    root.innerHTML=renderHome(); break;
+    case 'active':  root.innerHTML=renderActive(); break;
+    case 'summary': root.innerHTML=renderSummary(); break;
+    case 'history': root.innerHTML=renderHistory(); break;
+    case 'detail':  root.innerHTML=renderDetail(); break;
+  }
+}
+
+// ─── HOME SCREEN ──────────────────────────────────────────────────────────────
+function renderHome() {
+  const {selectedType:t, selectedLevel:l, selectedDuration:d} = state;
+  const params = WORKOUT_PARAMS[t][d][l];
+  const lc = LEVEL_COLORS[l];
+
+  return `<div class="screen"><div class="bg"></div><div class="container">
+    <header style="text-align:center;margin-bottom:28px">
+      <div style="font-size:44px;margin-bottom:4px">⚡</div>
+      <h1 class="title">FORGE</h1>
+      <p class="subtitle">TACTICAL WORKOUT SYSTEM</p>
+    </header>
+
+    <div class="card">
+      <label class="label">WORKOUT TYPE</label>
+      <div class="toggle-group">
+        <button class="toggle-btn ${t==='circuit'?'active':''}" onclick="setState({selectedType:'circuit'})">🔄 Circuit</button>
+        <button class="toggle-btn ${t==='military'?'active':''}" onclick="setState({selectedType:'military'})">🎖 Military</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <label class="label">FITNESS LEVEL</label>
+      <div class="toggle-group" style="margin-bottom:10px">
+        <button class="toggle-btn ${l==='beginner'?'active':''}" style="${l==='beginner'?'border-color:rgba(0,200,100,0.5);background:rgba(0,200,100,0.1);color:#00c864':''}" onclick="setState({selectedLevel:'beginner'})">🟢<br><span class="sub">Beginner</span></button>
+        <button class="toggle-btn ${l==='intermediate'?'active':''}" style="${l==='intermediate'?'border-color:rgba(255,180,0,0.5);background:rgba(255,180,0,0.1);color:#ffb400':''}" onclick="setState({selectedLevel:'intermediate'})">🟡<br><span class="sub">Intermediate</span></button>
+        <button class="toggle-btn ${l==='advanced'?'active':''}" style="${l==='advanced'?'border-color:rgba(255,80,80,0.5);background:rgba(255,80,80,0.1);color:#ff5050':''}" onclick="setState({selectedLevel:'advanced'})">🔴<br><span class="sub">Advanced</span></button>
+      </div>
+      <div style="font-size:12px;color:#888;padding:6px 2px">${LEVEL_DESC[l]}</div>
+    </div>
+
+    <div class="card">
+      <label class="label">WORKOUT DURATION</label>
+      <div class="toggle-group">
+        ${[20,30,45,60].map(v=>`<button class="toggle-btn ${d===v?'active':''}" onclick="setState({selectedDuration:${v}})">${v}<span class="sub">min</span></button>`).join('')}
+      </div>
+    </div>
+
+    <div class="card" style="background:rgba(0,255,136,0.03);border-color:rgba(0,255,136,0.12)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:11px;letter-spacing:2px;color:#888">WORKOUT PREVIEW</span>
+        <span style="color:${lc};font-size:11px;font-weight:700">${LEVEL_LABELS[l]}</span>
+      </div>
+      <div style="display:flex;gap:16px">
+        <div><div style="font-size:22px;font-weight:900;color:#00ff88">${params.exCount}</div><div style="font-size:10px;color:#888">EXERCISES</div></div>
+        <div><div style="font-size:22px;font-weight:900;color:#00ff88">${params.rounds}</div><div style="font-size:10px;color:#888">ROUNDS</div></div>
+        <div><div style="font-size:22px;font-weight:900;color:#00ff88">~${d}</div><div style="font-size:10px;color:#888">MINUTES</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <label class="label">YOUR GEAR</label>
+      <div>
+        <span class="gear-tag">🔔 Adj. Kettlebell</span>
+        <span class="gear-tag">🏋️ Pull-up Bar</span>
+        <span class="gear-tag">🪢 TRX Bands</span>
+        <span class="gear-tag">⚫ Med Balls</span>
+        <span class="gear-tag">🏅 Dumbbells (11lb)</span>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="startWorkout()">GENERATE WORKOUT</button>
+    <button class="btn-ghost" onclick="setState({screen:'history'})">📋 WORKOUT HISTORY (${state.history.length})</button>
+    <button class="btn-ghost" onclick="showInstallBanner()" style="font-size:12px;padding:10px;color:#555;border-color:rgba(255,255,255,0.08)">📲 Add to Home Screen</button>
+  </div></div>`;
+}
+
+function startWorkout() { generateWorkout(); state.screen='active'; render(); }
+
+// ─── ACTIVE SCREEN ────────────────────────────────────────────────────────────
+function renderActive() {
+  const w=state.workout, r=state.currentRound;
+  const roundDone = w.exercises.every(ex=>ex.completedRounds[r]!==null);
+  const allDone   = w.exercises.every(ex=>ex.completedRounds.every(v=>v!==null));
+  const lc = LEVEL_COLORS[w.level];
+
+  const roundBars = Array.from({length:w.rounds},(_,i)=>{
+    const bg=i<r?'#00ff88':i===r?'rgba(0,255,136,0.4)':'rgba(255,255,255,0.1)';
+    return `<div class="round-seg" style="background:${bg}"></div>`;
+  }).join('');
+
+  const exercises = w.exercises.map((ex,i)=>{
+    const done=ex.completedRounds[r]!==null, expanded=state.expandedEx===i, loggedVal=ex.completedRounds[r];
+    let expandedHTML='';
+    if (expanded) {
+      if (ex.type==='time') {
+        expandedHTML = renderCountdown(ex.target, i);
+      } else {
+        const vals=[ex.target-2,ex.target-1,ex.target,ex.target+1,ex.target+2].filter(v=>v>0);
+        const repBtns=vals.map(v=>`<button class="rep-btn" style="border:${loggedVal===v?'2px solid #00ff88':'1px solid rgba(255,255,255,0.2)'};background:${loggedVal===v?'rgba(0,255,136,0.15)':'transparent'};color:#fff" onclick="logRep(${i},${r},${v})">${v}</button>`).join('');
+        const pills=ex.completedRounds.map((rv,ri)=>`<span class="round-pill" style="background:${rv!==null?'rgba(0,255,136,0.15)':'rgba(255,255,255,0.05)'};color:${rv!==null?'#00ff88':'#555'}">R${ri+1}: ${rv!==null?rv:'–'}</span>`).join('');
+        expandedHTML=`<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08)" onclick="event.stopPropagation()">
+          <div class="rep-btns">${repBtns}</div>
+          <div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:10px">
+            <input id="custom-${i}" type="number" placeholder="custom" style="width:80px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:#fff;text-align:center;font-size:14px" onkeydown="if(event.key==='Enter'&&this.value)logRep(${i},${r},parseInt(this.value))"/>
+            <span style="color:#888;font-size:12px">↵ to log</span>
+          </div>
+          <div class="round-pills">${pills}</div>
+        </div>`;
+      }
+    }
+    return `<div class="card exercise-card ${done?'card-green':''}" onclick="toggleEx(${i})">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">${ex.icon}</span>
+          <div>
+            <div style="font-weight:700;color:${done?'#00ff88':'#fff'};font-size:15px">${ex.name}${ex.staple?` <span style="font-size:9px;background:rgba(0,255,136,0.15);color:#00ff88;border-radius:6px;padding:2px 6px;letter-spacing:1px;vertical-align:middle">ALWAYS</span>`:''}</div>
+            <div style="font-size:11px;color:#888">${ex.equipment}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:800;color:#00ff88;font-size:18px">${ex.type==='reps'?`${ex.target} reps`:`${ex.target}s`}</div>
+          ${done?`<div style="font-size:11px;color:#00ff88">✓ ${loggedVal}${ex.type==='reps'?' reps':'s'}</div>`:''}
+        </div>
+      </div>
+      ${expandedHTML}
+    </div>`;
+  }).join('');
+
+  let bottomBtn='';
+  if (allDone) bottomBtn=`<button class="btn-primary" onclick="finishWorkout()">COMPLETE WORKOUT ✓</button>`;
+  else if (roundDone&&r<w.rounds-1) bottomBtn=`<button class="btn-primary btn-blue" onclick="nextRound()">NEXT ROUND →</button>`;
+  else bottomBtn=`<button class="btn-ghost" style="opacity:0.4" disabled>LOG ALL EXERCISES TO CONTINUE</button>`;
+
+  return `<div class="screen"><div class="bg"></div><div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;color:#888;letter-spacing:1px;margin-bottom:2px">
+          ${w.type.toUpperCase()} · <span style="color:${lc}">${LEVEL_LABELS[w.level]}</span> · ${w.duration_target} MIN
+        </div>
+        <div style="font-size:22px;font-weight:900;color:#fff">ROUND ${r+1} / ${w.rounds}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:#888;letter-spacing:1px;margin-bottom:4px">ELAPSED</div>
+        <div id="elapsed-display" style="font-family:monospace;font-size:22px;color:${state.timerRunning?'#00ff88':state.timerSeconds>0?'#ffcc00':'#555'};font-weight:800;margin-bottom:6px">${fmtTime(state.timerSeconds)}</div>
+        <div style="display:flex;gap:5px;justify-content:flex-end">
+          <button id="timer-toggle-btn" class="btn-sm" style="background:${state.timerRunning?'#ff6b35':'#00ff88'};color:#000" onclick="toggleTimer()">${state.timerRunning?'⏸ PAUSE':state.timerSeconds===0?'▶ START':'▶ RESUME'}</button>
+          ${state.timerSeconds>0&&!state.timerRunning?`<button class="btn-sm" style="border:1px solid rgba(255,255,255,0.15);background:transparent;color:#888" onclick="resetTimerAndRender()">↺</button>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="round-bar">${roundBars}</div>
+    ${exercises}
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px">
+      <div><div style="font-weight:700;color:#fff">🚴 30-min Bike Ride</div><div style="font-size:11px;color:#888">Add after workout</div></div>
+      <div class="switch" style="background:${w.includeBike?'#00ff88':'rgba(255,255,255,0.15)'}" onclick="toggleBike()">
+        <div class="switch-thumb" style="left:${w.includeBike?'22px':'2px'}"></div>
+      </div>
+    </div>
+    ${bottomBtn}
+  </div></div>`;
+}
+
+// ─── COUNTDOWN TIMERS ─────────────────────────────────────────────────────────
+const countdownState = {};
+function renderCountdown(total, exIdx) {
+  const key=`cd_${exIdx}`;
+  if (!countdownState[key]) countdownState[key]={left:total,running:false,interval:null};
+  const cd=countdownState[key];
+  const pct=((total-cd.left)/total)*100, circ=2*Math.PI*34;
+  const m=Math.floor(cd.left/60),s=cd.left%60;
+  const display=m>0?`${m}:${String(s).padStart(2,'0')}`:cd.left;
+  return `<div style="text-align:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08)" onclick="event.stopPropagation()">
+    <div style="position:relative;width:80px;height:80px;margin:0 auto 8px">
+      <svg width="80" height="80" style="transform:rotate(-90deg)">
+        <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="6"/>
+        <circle id="cd-arc-${exIdx}" cx="40" cy="40" r="34" fill="none" stroke="${cd.left<=5?'#ff4444':'#00ff88'}" stroke-width="6" stroke-dasharray="${circ}" stroke-dashoffset="${circ*(1-pct/100)}" style="transition:stroke-dashoffset 1s linear"/>
+      </svg>
+      <div id="cd-display-${exIdx}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:${cd.left<=5?'#ff4444':'#fff'};font-family:monospace">${display}</div>
+    </div>
+    <div style="display:flex;gap:6px;justify-content:center">
+      <button class="btn-sm" style="background:${cd.running?'#ff6b35':'#00ff88'};color:#000;padding:4px 14px" onclick="toggleCountdown(${exIdx},${total})">${cd.running?'⏸':cd.left===0?'✓':'▶'}</button>
+      <button class="btn-sm" style="border:1px solid rgba(255,255,255,0.2);background:transparent;color:#aaa;padding:4px 10px" onclick="resetCountdown(${exIdx},${total})">↺</button>
+    </div>
+  </div>`;
+}
+function toggleCountdown(exIdx,total) {
+  const key=`cd_${exIdx}`;
+  if (!countdownState[key]) countdownState[key]={left:total,running:false,interval:null};
+  const cd=countdownState[key];
+  if (cd.running) { clearInterval(cd.interval);cd.interval=null;cd.running=false;updateCountdownUI(exIdx,total); }
+  else if (cd.left>0) {
+    cd.running=true;
+    cd.interval=setInterval(()=>{ cd.left--; updateCountdownUI(exIdx,total); if(cd.left<=0){clearInterval(cd.interval);cd.interval=null;cd.running=false;logRep(exIdx,state.currentRound,total);} },1000);
+    updateCountdownUI(exIdx,total);
+  }
+}
+function resetCountdown(exIdx,total) {
+  if(countdownState[`cd_${exIdx}`]) clearInterval(countdownState[`cd_${exIdx}`].interval);
+  countdownState[`cd_${exIdx}`]={left:total,running:false,interval:null};
+  updateCountdownUI(exIdx,total);
+}
+function updateCountdownUI(exIdx,total) {
+  const cd=countdownState[`cd_${exIdx}`]; if(!cd) return;
+  const circ=2*Math.PI*34, pct=((total-cd.left)/total)*100;
+  const arc=document.getElementById(`cd-arc-${exIdx}`), disp=document.getElementById(`cd-display-${exIdx}`);
+  if(arc){arc.setAttribute('stroke-dashoffset',circ*(1-pct/100));arc.setAttribute('stroke',cd.left<=5?'#ff4444':'#00ff88');}
+  if(disp){const m=Math.floor(cd.left/60),s=cd.left%60;disp.textContent=m>0?`${m}:${String(s).padStart(2,'0')}`:cd.left;disp.style.color=cd.left<=5?'#ff4444':'#fff';}
+}
+
+// ─── ACTIONS ──────────────────────────────────────────────────────────────────
+function toggleTimer() { state.timerRunning?stopTimer():startTimer(); renderTimerOnly(); }
+function resetTimerAndRender() { resetTimer(); render(); }
+function toggleEx(i) { state.expandedEx=state.expandedEx===i?null:i; render(); }
+function logRep(exIdx,round,value) { state.workout.exercises[exIdx].completedRounds[round]=value; render(); }
+function nextRound() { state.currentRound++; state.expandedEx=null; render(); }
+function toggleBike() { state.workout.includeBike=!state.workout.includeBike; render(); }
+function finishWorkout() {
+  stopTimer(); state.workout.completed=true; state.workout.duration=state.timerSeconds;
+  state.history.unshift({...state.workout}); saveHistory(); state.screen='summary'; render();
+}
+
+// ─── SUMMARY SCREEN ───────────────────────────────────────────────────────────
+function renderSummary() {
+  const w=state.workout;
+  const totalReps=w.exercises.reduce((s,ex)=>s+ex.completedRounds.reduce((a,r)=>a+(r||0),0),0);
+  const lc=LEVEL_COLORS[w.level];
+  const breakdown=w.exercises.map(ex=>{
+    const pills=ex.completedRounds.map((r,ri)=>`<span class="round-pill" style="background:${r!==null?'rgba(0,255,136,0.08)':'rgba(255,255,255,0.04)'};color:${r!==null?'#00ff88':'#555'}">${r!==null?r:'–'}</span>`).join('');
+    return `<div class="breakdown-row"><span style="color:#ccc;font-size:13px">${ex.icon} ${ex.name}</span><div style="display:flex;gap:4px">${pills}</div></div>`;
+  }).join('');
+  const bikeSection=w.includeBike?`<div class="card" style="padding:14px 16px;margin-bottom:16px">
+    <div style="font-weight:700;color:#fff;margin-bottom:8px">🚴 30-Min Bike Ride</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="switch" style="background:${w.bikeCompleted?'#00ff88':'rgba(255,255,255,0.15)'}" onclick="toggleBikeComplete()">
+        <div class="switch-thumb" style="left:${w.bikeCompleted?'22px':'2px'}"></div>
+      </div>
+      <span style="color:${w.bikeCompleted?'#00ff88':'#888'};font-size:14px">${w.bikeCompleted?'Bike ride completed ✓':'Mark as completed'}</span>
+    </div></div>`:'';
+  return `<div class="screen"><div class="bg"></div><div class="container">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:52px">🎯</div>
+      <h2 style="color:#00ff88;font-size:26px;font-weight:900;margin:8px 0 4px">MISSION COMPLETE</h2>
+      <p style="color:#888;font-size:13px">${dateLong(w.date)}</p>
+      <div style="margin-top:6px"><span style="color:${lc};font-size:12px;font-weight:700">${LEVEL_LABELS[w.level]}</span> <span style="color:#555;font-size:12px">·</span> <span style="color:#888;font-size:12px">${w.type.charAt(0).toUpperCase()+w.type.slice(1)} · ${w.duration_target} min target</span></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box"><div style="font-size:20px">⏱</div><div style="font-size:18px;font-weight:900;color:#00ff88">${fmtDur(w.duration||0)}</div><div style="font-size:10px;color:#888;letter-spacing:1px">ACTUAL TIME</div></div>
+      <div class="stat-box"><div style="font-size:20px">🔁</div><div style="font-size:18px;font-weight:900;color:#00ff88">${w.rounds}</div><div style="font-size:10px;color:#888;letter-spacing:1px">ROUNDS</div></div>
+      <div class="stat-box"><div style="font-size:20px">💥</div><div style="font-size:18px;font-weight:900;color:#00ff88">${totalReps}</div><div style="font-size:10px;color:#888;letter-spacing:1px">TOTAL REPS</div></div>
+    </div>
+    ${bikeSection}
+    <div class="card"><div style="font-weight:700;color:#fff;margin-bottom:10px;font-size:12px;letter-spacing:1px">EXERCISE BREAKDOWN</div>${breakdown}</div>
+    <button class="btn-primary" onclick="setState({screen:'home'})">NEW WORKOUT</button>
+    <button class="btn-ghost" onclick="setState({screen:'history'})">📋 VIEW HISTORY</button>
+  </div></div>`;
+}
+function toggleBikeComplete() {
+  state.workout.bikeCompleted=!state.workout.bikeCompleted;
+  const idx=state.history.findIndex(h=>h.id===state.workout.id);
+  if(idx>=0){state.history[idx]={...state.workout};saveHistory();}
+  render();
+}
+
+// ─── HISTORY SCREEN ───────────────────────────────────────────────────────────
+function renderHistory() {
+  if(!state.history.length) return `<div class="screen"><div class="bg"></div><div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <button class="btn-ghost" style="width:auto;padding:6px 14px;margin:0" onclick="setState({screen:'home'})">← BACK</button>
+      <h2 style="color:#fff;font-size:18px;font-weight:900">HISTORY</h2><div style="width:60px"></div>
+    </div>
+    <div style="text-align:center;color:#555;padding:40px"><div style="font-size:40px">📋</div><p>No workouts yet. Start training!</p></div>
+  </div></div>`;
+
+  const items=state.history.map((w,i)=>{
+    const totalReps=w.exercises.reduce((s,ex)=>s+ex.completedRounds.reduce((a,r)=>a+(r||0),0),0);
+    const lc=LEVEL_COLORS[w.level]||'#888';
+    const exTags=w.exercises.slice(0,4).map(ex=>`<span class="ex-tag">${ex.icon} ${ex.name}</span>`).join('');
+    const more=w.exercises.length>4?`<span style="font-size:11px;color:#555">+${w.exercises.length-4} more</span>`:'';
+    const bike=w.bikeCompleted?`<span style="font-size:11px;color:#00aaff;background:rgba(0,170,255,0.1);border-radius:10px;padding:2px 8px">🚴 Bike</span>`:'';
+    return `<div class="card" style="cursor:pointer;padding:14px 16px" onclick="openDetail(${i})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:800;color:#fff;font-size:15px">${w.type==='military'?'🎖':'🔄'} ${w.type.charAt(0).toUpperCase()+w.type.slice(1)}</div>
+          <div style="margin-top:3px"><span style="color:${lc};font-size:11px;font-weight:700">${(w.level||'').toUpperCase()}</span> <span style="color:#555;font-size:11px">· ${w.duration_target||'?'} min</span></div>
+          <div style="color:#888;font-size:12px;margin-top:2px">${dateStr(w.date)}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="color:#00ff88;font-weight:800">${fmtDur(w.duration||0)}</div>
+          <div style="font-size:11px;color:#888">${totalReps} reps · ${w.rounds}R</div>
+        </div>
+      </div>
+      <div class="history-exercises">${exTags}${more}${bike}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="screen"><div class="bg"></div><div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <button class="btn-ghost" style="width:auto;padding:6px 14px;margin:0" onclick="setState({screen:'home'})">← BACK</button>
+      <h2 style="color:#fff;font-size:18px;font-weight:900">HISTORY</h2>
+      <button class="btn-ghost" style="width:auto;padding:6px 14px;margin:0;color:#ff6b35;border-color:#ff6b35" onclick="if(confirm('Clear all history?')){state.history=[];saveHistory();render()}">CLEAR</button>
+    </div>${items}
+  </div></div>`;
+}
+function openDetail(i) { state.historyDetail=state.history[i]; state.screen='detail'; render(); }
+
+// ─── DETAIL SCREEN ────────────────────────────────────────────────────────────
+function renderDetail() {
+  const w=state.historyDetail, lc=LEVEL_COLORS[w.level]||'#888';
+  const exercises=w.exercises.map(ex=>{
+    const boxes=ex.completedRounds.map((r,ri)=>`<div class="round-box" style="background:${r!==null?'rgba(0,255,136,0.1)':'rgba(255,255,255,0.04)'};border:1px solid ${r!==null?'rgba(0,255,136,0.2)':'rgba(255,255,255,0.06)'}">
+      <div style="font-size:10px;color:#888;margin-bottom:2px">R${ri+1}</div>
+      <div style="font-weight:800;color:${r!==null?'#00ff88':'#555'};font-size:14px">${r!==null?r:'–'}</div>
+    </div>`).join('');
+    return `<div class="card" style="padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:700;color:#fff">${ex.icon} ${ex.name}</div>
+        <div style="font-size:12px;color:#888">Target: ${ex.target}${ex.type==='reps'?' reps':'s'}</div>
+      </div>
+      <div class="round-boxes">${boxes}</div>
+    </div>`;
+  }).join('');
+  const bike=w.bikeCompleted?`<div class="card" style="padding:12px 14px;background:rgba(0,170,255,0.08);border:1px solid rgba(0,170,255,0.2)">🚴 <span style="color:#00aaff;font-weight:700">30-min bike ride completed</span></div>`:'';
+  return `<div class="screen"><div class="bg"></div><div class="container">
+    <button class="btn-ghost" style="width:auto;padding:6px 14px;margin-bottom:16px" onclick="setState({screen:'history'})">← BACK</button>
+    <div style="margin-bottom:20px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+        <span style="color:${lc};font-size:12px;font-weight:700;letter-spacing:1px">${(w.level||'').toUpperCase()}</span>
+        <span style="color:#555">·</span>
+        <span style="color:#888;font-size:12px">${w.type.charAt(0).toUpperCase()+w.type.slice(1)} · ${w.duration_target||'?'} min</span>
+      </div>
+      <h2 style="color:#fff;font-size:22px;font-weight:900;margin:0 0 4px">${dateLong(w.date)}</h2>
+      <div style="color:#00ff88;font-weight:700">⏱ ${fmtDur(w.duration||0)} · ${w.rounds} rounds</div>
+    </div>
+    ${exercises}${bike}
+  </div></div>`;
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function setState(updates) { Object.assign(state,updates); render(); }
+function showInstallBanner() { document.getElementById('install-banner').classList.add('show'); }
+function checkInstall() {
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent), isStandalone=window.navigator.standalone===true;
+  if(isIOS&&!isStandalone) setTimeout(()=>document.getElementById('install-banner').classList.add('show'),2000);
+}
+
+render();
+checkInstall();
+</script>
+</body>
+</html>
